@@ -1,10 +1,11 @@
 module Playable
-  CHOICES = ['rock', 'paper', 'scissors', 'lizard', 'spock']
-  ROCK = {'lizard' => "Rock crushes lizard.", 'scissors' => "Rock crushes scissors."}
-  PAPER = {'rock' => "Paper covers rock.", 'spock' => "Paper disproves Spock."}
-  SCISSORS = {'paper' => "Scissors cut paper.", 'lizard' => "Scissors decapitate Lizard."}
-  LIZARD = {'paper' => "Lizard eats Paper.", 'spock' => "Lizard poisons Spock."}
-  SPOCK = {'rock' => "Spock vaporizes Rock.", 'scissors' => "Spock smashes Scissors."}
+   MESSAGES = {
+     'rock' => {'lizard' => "Rock crushes lizard.", 'scissors' => "Rock crushes scissors."},
+     'paper' => {'rock' => "Paper covers rock.", 'spock' => "Paper disproves Spock."},
+     'scissors' => {'paper' => "Scissors cut paper.", 'lizard' => "Scissors decapitate Lizard."},
+     'lizard' => {'paper' => "Lizard eats Paper.", 'spock' => "Lizard poisons Spock."},
+     'spock' => {'rock' => "Spock vaporizes Rock.", 'scissors' => "Spock smashes Scissors."}
+   }
 end
 
 class PlayerHand
@@ -14,7 +15,7 @@ class PlayerHand
     begin
       puts "Please type your choice (rock/paper/scissors/lizard/spock)"
       choice = gets.chomp.downcase
-    end until Playable::CHOICES.include?(choice) 
+    end until MESSAGES.include?(choice) 
     self.hand = choice
   end
 end
@@ -23,7 +24,7 @@ class ComputerHand
   include Playable
   attr_accessor :hand
   def choose_hand
-    self.hand = Playable::CHOICES.sample
+    self.hand = MESSAGES.keys.sample
   end
 end
 
@@ -42,22 +43,22 @@ class Game
   end
   
   def display_hands
-    puts "    You chose #{player.hand.capitalize}. \n    The computer chose #{computer.hand.capitalize}."
+    puts "    You chose #{player.hand.capitalize}." 
+    puts "    The computer chose #{computer.hand.capitalize}."
   end
   
-  def compare_hands(*hands)
-    winner = nil
-    hands.each_with_index do |x, y|
-      winning_message = Playable.const_get(x.upcase)[hands[y-1]]
-      if winning_message
-        puts winning_message
-        winner = x
-      end
-      winner
+  def compare_hands(player, computer)
+    if MESSAGES[player][computer]
+      puts MESSAGES[player][computer]
+      winner = player
+    elsif MESSAGES[computer][player]
+      puts MESSAGES[computer][player]
+      winner = computer
     end
-    if winner == hands[0]
+
+    if winner == player
       puts "**You won!**"
-    elsif winner == hands[1]
+    elsif winner == computer
       puts "**You lost!**"
     else
       puts "It's a tie!"
@@ -67,7 +68,7 @@ class Game
   def play_again
     puts "Would you like to play again? (yes/no)"
     answer = gets.chomp.downcase   
-    Game.new.play if answer == 'yes'
+    play if answer == 'yes'
   end
   
   def play
