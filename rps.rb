@@ -1,38 +1,44 @@
-class PlayerHand
-  attr_accessor :hand
-  def choose_hand
-    begin
-      puts "Please type your choice."
-      choice = gets.chomp.downcase
-    end until Game::CHOICES.include?(choice) 
-    self.hand = choice
-  end
-end
-
-class ComputerHand
-  attr_accessor :hand
-  def choose_hand
-    self.hand = Game::CHOICES.sample
-  end
-end
-
-class Game  
+module Playable
   CHOICES = ['rock', 'paper', 'scissors', 'lizard', 'spock']
   ROCK = {'lizard' => "Rock crushes lizard.", 'scissors' => "Rock crushes scissors."}
   PAPER = {'rock' => "Paper covers rock.", 'spock' => "Paper disproves Spock."}
   SCISSORS = {'paper' => "Scissors cut paper.", 'lizard' => "Scissors decapitate Lizard."}
   LIZARD = {'paper' => "Lizard eats Paper.", 'spock' => "Lizard poisons Spock."}
   SPOCK = {'rock' => "Spock vaporizes Rock.", 'scissors' => "Spock smashes Scissors."}
-  
-  attr_accessor :player, :computer
+end
+
+class PlayerHand
+  include Playable
+  attr_accessor :hand
+  def choose_hand
+    begin
+      puts "Please type your choice (rock/paper/scissors/lizard/spock)"
+      choice = gets.chomp.downcase
+    end until Playable::CHOICES.include?(choice) 
+    self.hand = choice
+  end
+end
+
+class ComputerHand
+  include Playable
+  attr_accessor :hand
+  def choose_hand
+    self.hand = Playable::CHOICES.sample
+  end
+end
+
+class Game  
+  include Playable
+  attr_accessor :player, :computer, :winner
 
   def initialize 
     @player = PlayerHand.new
     @computer = ComputerHand.new
+    @winner = winner
   end
   
   def greeting
-    puts "Welcome to Rock-Paper-Scissors-Lizard-Spock"
+    puts "Welcome to Rock-Paper-Scissors-Lizard-Spock, the ultimate boredom crushing game!"
   end
   
   def display_hands
@@ -41,33 +47,27 @@ class Game
   
   def compare_hands(*hands)
     winner = nil
-    hands.each_with_index do |hand, index|
-      winning_message = Game.const_get(hand.upcase)[hands[index-1]]
+    hands.each_with_index do |x, y|
+      winning_message = Playable.const_get(x.upcase)[hands[y-1]]
       if winning_message
         puts winning_message
-        winner = hand
+        winner = x
       end
+      winner
     end
-    winner
-  end  
-  
-  def display_winner
-    if player == computer
-      puts "It's a tie!"
-    end  
-    winner = compare_hands(player, computer)    
-    case winner
-    when player
+    if winner == hands[0]
       puts "**You won!**"
-    when computer
+    elsif winner == hands[1]
       puts "**You lost!**"
+    else
+      puts "It's a tie!"
     end
   end
   
   def play_again
     puts "Would you like to play again? (yes/no)"
     answer = gets.chomp.downcase   
-    false if answer != 'yes'
+    Game.new.play if answer == 'yes'
   end
   
   def play
@@ -77,13 +77,8 @@ class Game
     computer.choose_hand
     display_hands
     compare_hands(player.hand, computer.hand)
-    display_winner
+    play_again
   end
 end
 
-game = Game.new
-
-begin
-  game.play
-end while game.play_again
-puts "Thanks For Playing."
+Game.new.play
